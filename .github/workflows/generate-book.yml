@@ -1,0 +1,51 @@
+name: Generar Libro de Colorear
+
+on:
+  workflow_dispatch:
+    inputs:
+      theme:
+        description: 'Tema (mandalas, animals, nature, geometric, fantasy, patterns, inspirational)'
+        required: true
+        default: 'geometric'
+      pages:
+        description: 'Número de páginas'
+        required: true
+        default: '30'
+      lineart_method:
+        description: 'Calidad de línea (enhanced, standard, detailed)'
+        required: true
+        default: 'enhanced'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: coloring-books-main
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Generar el libro de colorear
+        run: |
+          python coloring_book_generator.py \
+            --theme ${{ github.event.inputs.theme }} \
+            --pages ${{ github.event.inputs.pages }} \
+            --force-lineart \
+            --lineart-method ${{ github.event.inputs.lineart_method }} \
+            --pdf
+
+      - name: Subir el resultado como descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: libro-de-colorear-${{ github.event.inputs.theme }}
+          path: coloring-books-main/output/
+          retention-days: 14
